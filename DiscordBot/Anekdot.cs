@@ -8,7 +8,7 @@ namespace DiscordBot
     {
         public static List<string> Anekdots;
 
-        public static void LoadAnikdots()
+        public static void Load()
         {
             string path = "aneks.sql";
 

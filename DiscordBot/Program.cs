@@ -6,7 +6,7 @@ namespace DiscordBot
     {
         static void Main(string[] args)
         {
-            Anekdot.LoadAnikdots();
+            Anekdot.Load();
 
             var bot = new Bot();
             bot.RunAsync().GetAwaiter().GetResult();
