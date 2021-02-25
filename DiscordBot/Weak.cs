@@ -4,6 +4,7 @@ namespace DiscordExcel
 {
     public class Weak
     {
+        private static readonly DateTime startDay = new DateTime(2021, 02, 01);
         public string NameWeak { get; set; }
         public bool ContainsSubject { get; set; }
 
@@ -13,18 +14,15 @@ namespace DiscordExcel
             ContainsSubject = contains;
         }
 
-        public static int GetAge(DateTime data)
-        {
-            var c = DateTime.Today.Subtract(data).Days;
-            return c; 
-        }
+        public static int GetAge(DateTime data) => DateTime.Today.Subtract(data).Days;
 
-        public static string GetWeak()
-        {
-            var startDay = new DateTime(2021, 02, 01);
-            var toDay = DateTime.Today;
+        public static string GetNextWeak() => (GetNumberOfWeak() % 2 != 0) ? "Чётная" : "Нечётная";
 
-            var countDays = toDay.Subtract(startDay).Days;
+        public static string GetWeak() => (GetNumberOfWeak() % 2 == 0) ? "Чётная" : "Нечётная";
+
+        public static int GetNumberOfWeak()
+        {
+            var countDays = DateTime.Today.Subtract(startDay).Days;
             var count = 0;
             while (countDays >= 0)
             {
@@ -32,9 +30,7 @@ namespace DiscordExcel
                 countDays -= 7;
             }
 
-            var message = $"№{count} ";
-            message += (count % 2 == 0) ? "Чётная" : "Нечётная";
-            return message;
+            return count;
         }
     }
 }

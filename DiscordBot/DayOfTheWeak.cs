@@ -13,7 +13,7 @@ namespace DiscordExcel
             Times = new List<Time>(5);
         }
 
-        public static string GetDayOfTheWeak(string text)
+        public static Tuple<string, string> GetDayOfTheWeak(string text)
         {
             var date = DateTime.Today.Date;
 
@@ -22,16 +22,27 @@ namespace DiscordExcel
                 case ("завтра"):
                     date = date.AddDays(1);
                     break;
+                case ("сегодня"):
+                    break;
                 case ("вчера"):
                     date = date.AddDays(6);
                     break;
+                default:
+                    return null;
             }
-            var message = ConvertToRus(date.DayOfWeek.ToString());
+            var day = ConvertToRus(date.DayOfWeek.ToString());
+            var weak = Weak.GetWeak();
 
-            if (message.Equals("суббота") || message.Equals("воскресенье"))
-                message = "Выходной";
+            if (day.Equals("суббота") || day.Equals("воскресенье"))
+            {
+                day = "Выходной";
+            }
+            if (day.Equals("понедельник") && text.Equals("завтра"))
+            {
+                weak = Weak.GetNextWeak();
+            }
 
-            return message;
+            return Tuple.Create(day, weak);
         }
 
         private static string ConvertToRus(string day)

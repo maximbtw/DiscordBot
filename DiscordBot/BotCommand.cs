@@ -55,7 +55,7 @@ namespace DiscordBot
         }
 
 
-        [Command("Avatar")]
+        [Command("Ava")]
         [Description("Возвращает аватар пользователя")]
         public async Task GiveAvatar(CommandContext ctx, 
             [Description("Ссылка на пользователя")] DiscordUser discordUser = null)
@@ -96,15 +96,19 @@ namespace DiscordBot
             [Description("Группа")] string groupName = "бст1902")
         {
             var dayOfWeak = DayOfTheWeak.GetDayOfTheWeak(day);
-            if (string.IsNullOrEmpty(dayOfWeak)) return;
-            if (dayOfWeak.ToLower().Equals("выходной"))
+
+            if (dayOfWeak == null) return;
+
+            if (dayOfWeak.Item1.ToLower().Equals("выходной"))
             {
-                await ctx.Channel.SendMessageAsync(dayOfWeak).ConfigureAwait(false);
+                await ctx.Channel.SendMessageAsync(dayOfWeak.Item1).ConfigureAwait(false);
                 return;
             }
 
-            var message = Timetable.GetMessageTimetable(groupName,dayOfWeak);
-            await ctx.Channel.SendMessageAsync(message).ConfigureAwait(false);
+            foreach (var message in Timetable.GetMessageTimetable(groupName, dayOfWeak))
+            {
+                await ctx.Channel.SendMessageAsync(message).ConfigureAwait(false);
+            }
         }
 
         [Command("ФуллРасп")]
@@ -112,16 +116,21 @@ namespace DiscordBot
         public async Task GetTimetable(CommandContext ctx,
             [Description("Группа")] string groupName = "бст1902")
         {
-            var message = Timetable.GetMessageTimetable(groupName);
-            await ctx.Channel.SendMessageAsync(message).ConfigureAwait(false);
+            foreach (var message in Timetable.GetMessageTimetable(groupName))
+            {
+                await ctx.Channel.SendMessageAsync(message).ConfigureAwait(false);
+            }
         }
 
         [Command("Неделя")]
         [Description("Неделя с начала семестра")]
         public async Task GetWeak(CommandContext ctx)
         {
-            var message = Weak.GetWeak();
-            message += message.ToLower().Equals("чётная") ? " - нижняя" : " - верхняя";
+            var weak = Weak.GetWeak();
+
+            var message = $"№ {Weak.GetNumberOfWeak()} {weak}" 
+                + (weak.ToLower().Equals("чётная") ? " - нижняя" : " - верхняя");
+
             await ctx.Channel.SendMessageAsync(message).ConfigureAwait(false);
         }
 
@@ -129,9 +138,20 @@ namespace DiscordBot
         [Description("День недели")]
         public async Task GetDay(CommandContext ctx, string day = "сегодня")
         {
+            string message = string.Empty;
+
             var dayOfWeak = DayOfTheWeak.GetDayOfTheWeak(day);
-            if (string.IsNullOrEmpty(dayOfWeak)) dayOfWeak = "Не найденно";
-            await ctx.Channel.SendMessageAsync(dayOfWeak).ConfigureAwait(false);
+
+            if (dayOfWeak == null)
+            {
+                message = "Не найденно";
+            }
+            else
+            {
+                message = dayOfWeak.Item1;
+            }
+
+            await ctx.Channel.SendMessageAsync(message).ConfigureAwait(false);
         }
 
         [Command("Анекдот")]

@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Text;
+using System.Linq;
+using System;
 
 namespace DiscordExcel
 {
@@ -14,68 +16,58 @@ namespace DiscordExcel
             dayOfWeeks = new List<DayOfTheWeak>(5);
         }
 
-        public static string GetMessageTimetable(string groupName, string _dayOfWeak = null)
+        public static IEnumerable<string> GetMessageTimetable
+            (string groupName, Tuple<string,string> dayAndWeak = null)
         {
             var parser = new ExcelParser();
 
-            return (!parser.WritingExcel(groupName.ToLower()))
-                    ? $"\"{groupName}\" - такой группы не найдено"
-                    : parser.Timetable.FormatMesssage(_dayOfWeak);
+            var isParsed = parser.WritingExcel(groupName.ToLower());
+
+            if (!isParsed)
+            {
+                yield return $"\"{groupName}\" - такой группы не найдено";
+                yield break;
+            }
+
+            foreach(var message in parser.Timetable.CreateMessage(dayAndWeak))
+            {
+                yield return message;
+            }
         }
 
-        private string FormatMesssage(string _dayOfWeak = null)
+        private IEnumerable<string> CreateMessage(Tuple<string, string> dayAndWeak = null)
         {
-            var weak = string.IsNullOrEmpty(_dayOfWeak) ? string.Empty : Weak.GetWeak().Split(' ')[1].ToLower();
-
+            var weak = (dayAndWeak == null) ? "любая" : dayAndWeak.Item2;
             var message = new StringBuilder($"Расписание для группы: {Group.ToUpper()}\n");
+            yield return message.ToString();
+            message.Clear();
 
             foreach (var dayOfWeak in dayOfWeeks)
             {
-                if (!string.IsNullOrEmpty(_dayOfWeak)
-                 && !_dayOfWeak.Equals(dayOfWeak.NameDay.ToLower()))
+                if (dayAndWeak != null && !dayAndWeak.Item1.ToLower().Equals(dayOfWeak.NameDay.ToLower()))
                     continue;
-                message.Append($"\n{dayOfWeak.NameDay}\n");
+
+                message.Append($"--------------------------------------------------------------");
+                message.Append($"\n{dayOfWeak.NameDay}");
 
                 foreach (var time in dayOfWeak.Times)
                 {
-                    if (CheckTime(weak, time)) continue;
-                    message.Append($"\n {time.NameTime }");
+                    if (time.Subjects.Count == 0) continue;
+                    if (dayAndWeak != null && !time.Subjects.Any(x => x.ContainsInWeak(dayAndWeak.Item2))) continue;
+
+                    message.Append($"\n\n [{time.NameTime }]\n");
 
                     foreach (var subject in time.Subjects)
                     {
-                        if (SignificanceWeak(weak, subject)) continue;
+                        if (dayAndWeak != null && !subject.ContainsInWeak(dayAndWeak.Item2)) continue;
 
-                        if (subject.EvenWeak.ContainsSubject
-                        && !subject.OddWeak.ContainsSubject
-                        && string.IsNullOrEmpty(weak))
-                            message.Append($"\n {subject.EvenWeak.NameWeak }");
-
-                        if (!subject.EvenWeak.ContainsSubject
-                          && subject.OddWeak.ContainsSubject
-                          && string.IsNullOrEmpty(weak))
-                            message.Append($"\n {subject.OddWeak.NameWeak }");
-
-                        message.Append($"\n {subject.TextSubject}\n");
+                        message.Append($"\n[Неделя: {subject.GetWeak()}]");
+                        message.Append($"\n{subject.TextSubject}");
                     }
                 }
+                yield return message.ToString();
+                message.Clear();
             }
-
-            return message.ToString();
-        }
-
-        private bool SignificanceWeak(string weak, Subject subject)
-        {
-            return !string.IsNullOrEmpty(weak) 
-               && ((weak.Equals(subject.EvenWeak.NameWeak.ToLower()) && !subject.EvenWeak.ContainsSubject)
-                || (weak.Equals(subject.OddWeak.NameWeak.ToLower()) && !subject.OddWeak.ContainsSubject));
-        }
-
-        private bool CheckTime(string weak, Time time)
-        {
-            foreach(var subject in time.Subjects)
-                if (!SignificanceWeak(weak, subject)) 
-                    return false; 
-            return true;
         }
     }
 }
