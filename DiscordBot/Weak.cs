@@ -13,6 +13,12 @@ namespace DiscordExcel
             ContainsSubject = contains;
         }
 
+        public static int GetAge(DateTime data)
+        {
+            var c = DateTime.Today.Subtract(data).Days;
+            return c; 
+        }
+
         public static string GetWeak()
         {
             var startDay = new DateTime(2021, 02, 01);

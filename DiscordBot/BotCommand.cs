@@ -141,5 +141,16 @@ namespace DiscordBot
             var number = CommandAsset.GetRandom(0, Anekdot.Anekdots.Count);
             await ctx.Channel.SendMessageAsync(Anekdot.Anekdots[number]).ConfigureAwait(false);
         }
+
+        [Command("Возраст")]
+        [Description("Возраст пользователя на сервере")]
+        public async Task GetUserAgeOnServer(CommandContext ctx, DiscordMember discordMember)
+        {  
+            var days = Weak.GetAge(discordMember.JoinedAt.DateTime);
+
+            var message = $"{discordMember.DisplayName} на сервере уже: {days} дней" +
+                $" \nПрисоединился к нам: {discordMember.JoinedAt.DateTime}";
+            await ctx.Channel.SendMessageAsync(message).ConfigureAwait(false);
+        }
     }
 }

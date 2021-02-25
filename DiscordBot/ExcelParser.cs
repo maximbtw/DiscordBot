@@ -3,6 +3,7 @@ using ClosedXML.Excel;
 
 namespace DiscordExcel
 {
+    
     public class ExcelParser
     {
         private static readonly string path = "Расписание.xlsx";
