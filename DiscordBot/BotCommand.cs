@@ -72,7 +72,8 @@ namespace DiscordBot
             [Description("Пользователь который получит сообщение")] DiscordMember discordMember = null)
         {
             if (discordMember == null) discordMember = ctx.Member;
-            var message = discordMember.DisplayName+ ", тили-тили бом, закрой глаза скорее";
+            var message = discordMember.DisplayName+ ", тили-тили бом, закрой глаза скорее"+"\n";
+            message += "Держи анекдот =)\n\n" + Anekdot.GetRandomAnekdot();
             await discordMember.SendMessageAsync(message).ConfigureAwait(false);
         }
 
@@ -158,14 +159,16 @@ namespace DiscordBot
         [Description("Случайный анекдот")]
         public async Task GetRandomAnekdot(CommandContext ctx)
         {
-            var number = CommandAsset.GetRandom(0, Anekdot.Anekdots.Count);
-            await ctx.Channel.SendMessageAsync(Anekdot.Anekdots[number]).ConfigureAwait(false);
+            await ctx.Channel.SendMessageAsync(Anekdot.GetRandomAnekdot()).ConfigureAwait(false);
         }
 
         [Command("Возраст")]
         [Description("Возраст пользователя на сервере")]
-        public async Task GetUserAgeOnServer(CommandContext ctx, DiscordMember discordMember)
-        {  
+        public async Task GetUserAgeOnServer(CommandContext ctx, 
+            [Description("Дата этого пользователя")] DiscordMember discordMember = null)
+        {
+            if (discordMember == null) discordMember = ctx.Member;
+
             var days = Weak.GetAge(discordMember.JoinedAt.DateTime);
 
             var message = $"{discordMember.DisplayName} на сервере уже: {days} дней" +

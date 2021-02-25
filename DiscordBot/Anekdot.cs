@@ -6,7 +6,7 @@ namespace DiscordBot
 {
     public class Anekdot
     {
-        public static List<string> Anekdots;
+        public static List<string> Anekdots { get; private set;}
 
         public static void Load()
         {
@@ -20,6 +20,11 @@ namespace DiscordBot
                 .Select(x => x.Replace("&quot;", ""))
                 .Select(x => x.Replace("\"\"", "\""))
                 .ToList();
+        }
+
+        public static string GetRandomAnekdot()
+        {
+            return Anekdots[CommandAsset.GetRandom(0, Anekdot.Anekdots.Count)];
         }
     }
 }
