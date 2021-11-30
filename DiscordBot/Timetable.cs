@@ -1,72 +1,96 @@
-﻿using System.Collections.Generic;
-using System.Text;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
-using System;
+using System.Text;
+using DiscordExcel;
 
-namespace DiscordExcel
+namespace DiscordBot
 {
     public class Timetable
     {
-        public string Group { get; set; }
-        public List<DayOfTheWeak> dayOfWeeks { get; set; }
+        public List<DayOfTheWeak> DayOfWeeks { get; }
+        
+        private readonly string _groupName;
 
-        public Timetable(string group)
+        public Timetable(string groupName)
         {
-            Group = group;
-            dayOfWeeks = new List<DayOfTheWeak>(5);
+            _groupName = groupName;
+            DayOfWeeks = new List<DayOfTheWeak>(5);
         }
 
-        public static IEnumerable<string> GetMessageTimetable
-            (string groupName, Tuple<string,string> dayAndWeak = null)
+        public static IEnumerable<string> GetMessageTimetable(string groupName, Tuple<string,string> dayAndWeak = null)
         {
-            var parser = new ExcelParser();
+            var parser = new ExcelParser(groupName.ToLower());
 
-            var isParsed = parser.WritingExcel(groupName.ToLower());
-
-            if (!isParsed)
+            if (parser.TryWriteExcelDocument())
             {
-                yield return $"\"{groupName}\" - такой группы не найдено";
-                yield break;
+                parser.Parse();
+
+                IEnumerable<string> text = parser.Timetable.CreateTextToDisplay(dayAndWeak);
+                
+                foreach(string lineText in text)
+                {
+                    yield return lineText;
+                }
             }
-
-            foreach(var message in parser.Timetable.CreateMessage(dayAndWeak))
+            else
             {
+                string message = $"\"{groupName}\" - такой группы не найдено";
+                
                 yield return message;
             }
         }
 
-        private IEnumerable<string> CreateMessage(Tuple<string, string> dayAndWeak = null)
+        private IEnumerable<string> CreateTextToDisplay(Tuple<string, string> dayAndWeak = null)
         {
-            var weak = (dayAndWeak == null) ? "любая" : dayAndWeak.Item2;
-            var message = new StringBuilder($"Расписание для группы: {Group.ToUpper()}\n");
-            yield return message.ToString();
-            message.Clear();
+            string title = $"Расписание для группы: {_groupName.ToUpper()}\n";
 
-            foreach (var dayOfWeak in dayOfWeeks)
+            yield return title;
+            
+            var textBuilder = new StringBuilder();
+
+            foreach (DayOfTheWeak dayOfWeak in DayOfWeeks)
             {
-                if (dayAndWeak != null && !dayAndWeak.Item1.ToLower().Equals(dayOfWeak.NameDay.ToLower()))
-                    continue;
-
-                message.Append($"--------------------------------------------------------------");
-                message.Append($"\n{dayOfWeak.NameDay}");
-
-                foreach (var time in dayOfWeak.Times)
+                bool isNotCurrentDay =
+                    dayAndWeak != null && !dayAndWeak.Item1.ToLower().Equals(dayOfWeak.NameDay.ToLower());
+                
+                if (isNotCurrentDay)
                 {
-                    if (time.Subjects.Count == 0) continue;
-                    if (dayAndWeak != null && !time.Subjects.Any(x => x.ContainsInWeak(dayAndWeak.Item2))) continue;
+                    continue;
+                }
 
-                    message.Append($"\n\n [{time.NameTime }]\n");
+                textBuilder.Append($"--------------------------------------------------------------");
+                textBuilder.Append($"\n{dayOfWeak.NameDay}");
 
-                    foreach (var subject in time.Subjects)
+                foreach (Time time in dayOfWeak.Times)
+                {
+                    bool containsTime =
+                        dayAndWeak == null || time.Subjects.Any(x => x.ContainsInWeak(dayAndWeak.Item2));
+                    
+                    if (!containsTime)
                     {
-                        if (dayAndWeak != null && !subject.ContainsInWeak(dayAndWeak.Item2)) continue;
+                        continue;
+                    }
 
-                        message.Append($"\n[Неделя: {subject.GetWeak()}]");
-                        message.Append($"\n{subject.TextSubject}");
+                    textBuilder.Append($"\n\n [{time.NameTime }]\n");
+
+                    foreach (Subject subject in time.Subjects)
+                    {
+                        bool containsWeek = dayAndWeak == null || subject.ContainsInWeak(dayAndWeak.Item2);
+                        
+                        if (containsWeek)
+                        {
+                            continue;
+                        }
+
+                        textBuilder.Append($"\n[Неделя: {subject.GetWeak()}]");
+                        textBuilder.Append($"\n{subject.TextSubject}");
                     }
                 }
-                yield return message.ToString();
-                message.Clear();
+                
+                yield return textBuilder.ToString();
+                
+                textBuilder.Clear();
             }
         }
     }

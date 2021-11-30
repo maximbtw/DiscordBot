@@ -1,78 +1,134 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using ClosedXML.Excel;
+using DiscordExcel;
 
-namespace DiscordExcel
+namespace DiscordBot
 {
-    
     public class ExcelParser
     {
-        private static readonly string path = "Расписание.xlsx";
         public Timetable Timetable { get; private set; }
+        
+        private const string Path = "Расписание.xlsx";
 
-        private IXLWorksheet workSheet;
-        private Cell cellGroup;
+        private readonly IXLWorksheet _workSheet;
+        private readonly string _nameGroup;
+        private readonly Cell _cellGroup;
+        
+        private DayOfTheWeak _currentDay;
+        private Time _currentTime;
 
-        public bool WritingExcel(string nameGroup)
+        public ExcelParser(string nameGroup)
         {
-            var workBook = new XLWorkbook(path);
-            workSheet = workBook.Worksheet("Лист1");
+            const string nameSheet = "Лист1";
+            
+            var workBook = new XLWorkbook(Path);
+            
+            _nameGroup = nameGroup;
+            _workSheet = workBook.Worksheet(nameSheet);
+            _cellGroup = FindCellGroup();
+        }
+        
+        public bool TryWriteExcelDocument() => !_cellGroup.Empty();
 
-            cellGroup = FindCellGroup(nameGroup);
-
-            if (cellGroup.Empty()) return false;
-
-            Timetable = new Timetable(nameGroup);
+        public void Parse()
+        {
+            if (_cellGroup.Empty())
+            {
+                throw new NullReferenceException(message: "Cell group is null");
+            }
+            
+            Timetable = new Timetable(_nameGroup);
 
             foreach (var cellDayOfWeak in FindDayOfWeak())
+            {
                 foreach (var cellTime in FindTime(cellDayOfWeak))
+                {
                     FindSubject(cellTime);
-
-            return true;
+                }
+            }
         }
 
-        private Cell FindCellGroup(string nameGroup)
+        private Cell FindCellGroup()
         {
-            Cell cell;
-            for (int y = 1; ; y++)
+            var cell = new Cell();
+            
+            if (TryFindYCell(ref cell))
             {
-                string message = workSheet.Cell(y, 1).Value.ToString();
-                if (string.IsNullOrEmpty(message)) continue;
-                if (message.ToLower().Equals("группы"))
+                if (TryFindXCell(ref cell))
+                {
+                    return cell;
+                }
+            }
+
+            return new Cell(0, 0);
+        }
+
+        private bool TryFindYCell(ref Cell cell)
+        {
+            int y = 1;
+            
+            while (y < int.MaxValue)
+            {
+                string message = _workSheet.Cell(y, 1).Value.ToString();
+
+                bool isFind = !string.IsNullOrEmpty(message) && message.ToLower().Equals("группы");
+                    
+                if (isFind)
                 {
                     cell.Y = y;
-                    break;
+
+                    return true;
                 }
+
+                y++;
             }
 
-            for (int x = 1; ; x++)
+            return false;
+        }
+        
+        private bool TryFindXCell(ref Cell cell)
+        {
+            int x = 1;
+            
+            while (x < 1000)
             {
-                if (x == 1000) return new Cell(0, 0);
-                string message = workSheet.Cell(cell.Y, x).Value.ToString();
-                if (string.IsNullOrEmpty(message)) continue;
-                if (message.ToLower().Equals(nameGroup))
+                string message = _workSheet.Cell(cell.Y, x).Value.ToString();
+
+                bool isFind = !string.IsNullOrEmpty(message) && message.ToLower().Equals(_nameGroup);
+
+                if (isFind)
                 {
                     cell.X = x;
-                    break;
+
+                    return true;
                 }
+
+                x++;
             }
 
-            return cell;
+            return false;
         }
-
-        private DayOfTheWeak currentDay;
-        private Time currentTime;
-
+        
         private IEnumerable<Cell> FindDayOfWeak()
         {
-            for (int y = cellGroup.Y + 1; ; y++)
+            const string lastDayOfWeekName = "пятница";
+            
+            for (int y = _cellGroup.Y + 1; ; y++)
             {
-                string message = workSheet.Cell(y, 1).Value.ToString(); ;
-                if (!string.IsNullOrEmpty(message))
+                string cellText = _workSheet.Cell(y, 1).Value.ToString();
+                
+                if (!string.IsNullOrEmpty(cellText))
                 {
-                    currentDay = new DayOfTheWeak(message);
-                    Timetable.dayOfWeeks.Add(currentDay);
+                    _currentDay = new DayOfTheWeak(cellText);
+                    Timetable.DayOfWeeks.Add(_currentDay);
+                    
                     yield return new Cell(y, 1);
-                    if (message.ToLower().Equals("пятница")) yield break;
+
+                    if (cellText.ToLower().Equals(lastDayOfWeekName))
+                    {
+                        yield break;
+                    }
                 }
             }
         }
@@ -81,11 +137,13 @@ namespace DiscordExcel
         {
             for (int y = cellDayOfWeak.Y; y < cellDayOfWeak.Y + 20; y++)
             {
-                string message = workSheet.Cell(y, 2).Value.ToString(); ;
-                if (!string.IsNullOrEmpty(message))
+                string cellText = _workSheet.Cell(y, 2).Value.ToString();
+                
+                if (!string.IsNullOrEmpty(cellText))
                 {
-                    currentTime = new Time(message);
-                    currentDay.Times.Add(currentTime);
+                    _currentTime = new Time(cellText);
+                    _currentDay.Times.Add(_currentTime);
+                    
                     yield return new Cell(y, 2);
                 }
             }
@@ -93,32 +151,36 @@ namespace DiscordExcel
 
         private void FindSubject(Cell cellTime)
         {
-            var parityWeak = CheckTheWeak(new Cell(cellTime.Y, cellGroup.X));
+            var parityWeak = CheckTheWeak(new Cell(cellTime.Y, _cellGroup.X));
             var subject = new Subject();
             var text = string.Empty;
 
             for (int y = cellTime.Y; y < cellTime.Y + 4; y++)
             {
-                var cell = MoveCellToRight(new Cell(y, cellGroup.X));
+                var cell = MoveCellToRight(new Cell(y, _cellGroup.X));
+                
                 if (parityWeak)
                 {
                     if (cellTime.Y == y)
                     {
                         subject.EvenWeak.ContainsSubject = false;
                     }
+                    
                     if (cellTime.Y + 2 == y)
                     {
                         AddSubject(subject, text);
+                        
                         subject = new Subject();
                         text = string.Empty;
                         subject.OddWeak.ContainsSubject = false;
                     }
                 }
 
-                string message = workSheet.Cell(cell.Y, cell.X).Value.ToString();
-                if (!string.IsNullOrEmpty(message))
+                string cellText = _workSheet.Cell(cell.Y, cell.X).Value.ToString();
+                
+                if (!string.IsNullOrEmpty(cellText))
                 {
-                    text += string.IsNullOrEmpty(text) ? message : "\n" + message;
+                    text += string.IsNullOrEmpty(text) ? cellText : "\n" + cellText;
                 }
             }
 
@@ -130,7 +192,7 @@ namespace DiscordExcel
             if (!string.IsNullOrEmpty(text))
             {
                 subject.TextSubject = text;
-                currentTime.Subjects.Add(subject);
+                _currentTime.Subjects.Add(subject);
             }
         }
 
@@ -138,11 +200,11 @@ namespace DiscordExcel
         {
             while (true)
             {
-                var convertCell = workSheet.Cell(cell.Y, cell.X);
+                IXLCell convertCell = _workSheet.Cell(cell.Y, cell.X);
 
                 if (convertCell.Style.Border.LeftBorder.Equals(XLBorderStyleValues.None))
                 {
-                    cell.X = cell.X - 1;
+                    cell.X -= 1;
                 }
                 else
                 {
@@ -153,13 +215,13 @@ namespace DiscordExcel
 
         private bool CheckTheWeak(Cell cell)
         {
-            return !workSheet.Cell(cell.Y + 2, cell.X)
-                   .Style.Border.TopBorder
-                   .Equals(XLBorderStyleValues.None)
-                   ||
-                   !workSheet.Cell(cell.Y + 1, cell.X)
-                   .Style.Border.BottomBorder
-                   .Equals(XLBorderStyleValues.None);
+            bool topBorderIsNone = _workSheet.Cell(cell.Y + 2, cell.X).Style.Border.TopBorder
+                .Equals(XLBorderStyleValues.None);
+            
+            bool bottomBorderIsNone = _workSheet.Cell(cell.Y + 1, cell.X).Style.Border.BottomBorder
+                .Equals(XLBorderStyleValues.None);
+
+            return !topBorderIsNone || !bottomBorderIsNone;
         }
 
         private struct Cell
@@ -167,9 +229,13 @@ namespace DiscordExcel
             public int X;
             public int Y;
 
-            public Cell(int y, int x) { Y = y; X = x; }
+            public Cell(int y, int x)
+            {
+                Y = y; 
+                X = x;
+            }
 
-            public bool Empty()
+            public readonly bool Empty()
             {
                 return X == 0 && Y == 0;
             }
