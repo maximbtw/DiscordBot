@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace DiscordExcel
+namespace DiscordBot
 {
     public class Weak
     {

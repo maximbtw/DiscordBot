@@ -2,7 +2,7 @@
 
 namespace DiscordBot
 {
-    public class CommandAsset
+    public static class CommandAsset
     {
         public static int GetRandom(int minValue = 0, int maxValue = 101)
         {
@@ -10,7 +10,7 @@ namespace DiscordBot
             return rnd.Next(minValue, maxValue);
         }
 
-        public static void Shufle<T>(T[] array)
+        public static void ShufleArray<T>(T[] array)
         {
             var rnd = new Random();
 

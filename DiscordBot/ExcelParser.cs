@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using ClosedXML.Excel;
-using DiscordExcel;
 
 namespace DiscordBot
 {

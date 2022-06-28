@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace DiscordExcel
+namespace DiscordBot
 {
     public class DayOfTheWeak
     {
-        public string NameDay { get; set; }
-        public List<Time> Times { get; set; }
+        public string NameDay { get; }
+        public List<Time> Times { get; }
         public DayOfTheWeak(string nameDay)
         {
             NameDay = nameDay;

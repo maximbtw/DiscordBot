@@ -1,9 +1,12 @@
-﻿using DiscordExcel;
-using DSharpPlus.CommandsNext;
+﻿using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
+using DiscordBot.Api.Services;
+using DiscordBot.Api.Services.Contracts.Gif.Translate.Parameters;
+using DiscordBot.Api.Services.Gif;
 
 namespace DiscordBot
 {
@@ -45,7 +48,7 @@ namespace DiscordBot
                                   .Select(x => x.DisplayName)
                                   .ToArray();
             if (users == null) return;
-            CommandAsset.Shufle(users);
+            CommandAsset.ShufleArray(users);
 
             string text = string.Empty;
             for (int i = 0; i < users.Length; i++)
@@ -174,6 +177,37 @@ namespace DiscordBot
             var message = $"{discordMember.DisplayName} на сервере уже: {days} дней" +
                 $" \nПрисоединился к нам: {discordMember.JoinedAt.DateTime}";
             await ctx.Channel.SendMessageAsync(message).ConfigureAwait(false);
+        }
+        
+        [Command("Gif")]
+        public async Task GetGif(CommandContext ctx, params string[] text)
+        {
+            StringBuilder builder = new StringBuilder();
+
+            foreach (var letter in text)
+            {
+                builder.Append(letter);
+            }
+
+            var parameters = new GifApiTranslateParameters
+            {
+                TextToTranslate = builder.ToString()
+            };
+
+            // ReSharper disable once ConvertToUsingDeclaration
+            using (var service = new GifApiService())
+            {
+                var result = await service.GifTranslate(parameters);
+                
+                if (result.IsSuccessful)
+                {
+                    await ctx.Channel.SendMessageAsync(result.Url).ConfigureAwait(false);
+                }
+                else
+                {
+                    await ctx.Channel.SendMessageAsync("Ох.. Не смог ничего найти...").ConfigureAwait(false);
+                }
+            }
         }
     }
 }

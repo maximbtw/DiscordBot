@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 
-
-namespace DiscordExcel
+namespace DiscordBot
 {
     public class Time
     {
