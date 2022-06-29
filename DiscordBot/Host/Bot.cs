@@ -1,13 +1,13 @@
-﻿using DSharpPlus;
-using DSharpPlus.CommandsNext;
-using DSharpPlus.EventArgs;
-using Newtonsoft.Json;
-using System.IO;
+﻿using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using DiscordBot.Commands;
+using DSharpPlus;
+using DSharpPlus.CommandsNext;
+using DSharpPlus.EventArgs;
+using Newtonsoft.Json;
 
-namespace DiscordBot
+namespace DiscordBot.Host
 {
     internal class Bot
     {

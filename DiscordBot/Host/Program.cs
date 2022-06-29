@@ -1,6 +1,6 @@
 ﻿
 
-namespace DiscordBot
+namespace DiscordBot.Host
 {
     class Program
     {
