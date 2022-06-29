@@ -1,16 +1,12 @@
-﻿using DSharpPlus.CommandsNext;
+﻿using System.Linq;
+using System.Threading.Tasks;
+using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using DiscordBot.Api.Services;
-using DiscordBot.Api.Services.Contracts.Gif.Translate.Parameters;
-using DiscordBot.Api.Services.Gif;
 
-namespace DiscordBot
+namespace DiscordBot.Commands
 {
-    public class BotCommand : BaseCommandModule
+    public class BotCommand : BaseCommandModule, IBotCommand
     {
         [Command("Roll")]
         [Description("Рандомит число")]
@@ -69,16 +65,16 @@ namespace DiscordBot
         }
 
 
-        [Command("Tilibom")]
-        [Description("Секретное сообщение")]
-        public async Task MessageTiliBom(CommandContext ctx,
-            [Description("Пользователь который получит сообщение")] DiscordMember discordMember = null)
-        {
-            if (discordMember == null) discordMember = ctx.Member;
-            var message = discordMember.DisplayName+ ", тили-тили бом, закрой глаза скорее"+"\n";
-            message += "Держи анекдот =)\n\n" + Anekdot.GetRandomAnekdot();
-            await discordMember.SendMessageAsync(message).ConfigureAwait(false);
-        }
+        // [Command("Tilibom")]
+        // [Description("Секретное сообщение")]
+        // public async Task MessageTiliBom(CommandContext ctx,
+        //     [Description("Пользователь который получит сообщение")] DiscordMember discordMember = null)
+        // {
+        //     if (discordMember == null) discordMember = ctx.Member;
+        //     var message = discordMember.DisplayName+ ", тили-тили бом, закрой глаза скорее"+"\n";
+        //     message += "Держи анекдот =)\n\n" + Anekdot.GetRandomAnekdot();
+        //     await discordMember.SendMessageAsync(message).ConfigureAwait(false);
+        // }
 
         [Command("Emoji")]
         [Description("Случайный смайлик сервера")]
@@ -158,12 +154,12 @@ namespace DiscordBot
             await ctx.Channel.SendMessageAsync(message).ConfigureAwait(false);
         }
 
-        [Command("Анекдот")]
-        [Description("Случайный анекдот")]
-        public async Task GetRandomAnekdot(CommandContext ctx)
-        {
-            await ctx.Channel.SendMessageAsync(Anekdot.GetRandomAnekdot()).ConfigureAwait(false);
-        }
+        // [Command("Анекдот")]
+        // [Description("Случайный анекдот")]
+        // public async Task GetRandomAnekdot(CommandContext ctx)
+        // {
+        //     await ctx.Channel.SendMessageAsync(Anekdot.GetRandomAnekdot()).ConfigureAwait(false);
+        // }
 
         [Command("Возраст")]
         [Description("Возраст пользователя на сервере")]
@@ -179,35 +175,14 @@ namespace DiscordBot
             await ctx.Channel.SendMessageAsync(message).ConfigureAwait(false);
         }
         
-        [Command("Gif")]
-        public async Task GetGif(CommandContext ctx, params string[] text)
-        {
-            StringBuilder builder = new StringBuilder();
+        [Command(name: "Gif")]
+        [Description("Возвращает gif по тексту")]
+        public async Task GetTranslate(CommandContext ctx, params string[] text) =>
+            await BotCommandManager.GetTranslateGif(ctx, text);
 
-            foreach (var letter in text)
-            {
-                builder.Append(letter);
-            }
-
-            var parameters = new GifApiTranslateParameters
-            {
-                TextToTranslate = builder.ToString()
-            };
-
-            // ReSharper disable once ConvertToUsingDeclaration
-            using (var service = new GifApiService())
-            {
-                var result = await service.GifTranslate(parameters);
-                
-                if (result.IsSuccessful)
-                {
-                    await ctx.Channel.SendMessageAsync(result.Url).ConfigureAwait(false);
-                }
-                else
-                {
-                    await ctx.Channel.SendMessageAsync("Ох.. Не смог ничего найти...").ConfigureAwait(false);
-                }
-            }
-        }
+        [Command(name: "Анедот")]
+        [Description("Возвращает рандомный анекдот")]
+        public async Task GetRandomAnekdot(CommandContext ctx) =>
+            await BotCommandManager.GetRandomAnekdot(ctx);
     }
 }

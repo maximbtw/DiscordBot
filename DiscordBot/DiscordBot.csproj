@@ -17,8 +17,10 @@
     <PackageReference Include="DSharpPlus.CommandsNext" Version="4.3.0-nightly-01146" />
     <PackageReference Include="DSharpPlus.Interactivity" Version="4.3.0-nightly-01146" />
     <PackageReference Include="Flurl" Version="3.0.6" />
+    <PackageReference Include="HtmlAgilityPack" Version="1.11.43" />
     <PackageReference Include="RestSharp" Version="108.0.2-alpha.0.1" />
     <PackageReference Include="RichardSzalay.MockHttp" Version="6.0.0" />
+    <PackageReference Include="Selenium.WebDriver" Version="4.3.0" />
   </ItemGroup>
 
   <ItemGroup>

@@ -5,6 +5,7 @@ using Newtonsoft.Json;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
+using DiscordBot.Commands;
 
 namespace DiscordBot
 {

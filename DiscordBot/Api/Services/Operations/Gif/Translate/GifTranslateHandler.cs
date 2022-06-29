@@ -4,24 +4,21 @@ using DiscordBot.Api.Connectors.Gif.Translate;
 using DiscordBot.Api.Services.Contracts.Gif.Translate.Parameters;
 using DiscordBot.Api.Services.Contracts.Gif.Translate.Result;
 
-namespace DiscordBot.Api.Services.Gif.Translate
+namespace DiscordBot.Api.Services.Operations.Gif.Translate
 {
-    public class GifTranslateHandler : IApiHandler<GifApiTranslateParameters, GifApiTranslateResult>
+    public class GifTranslateHandler : ApiHandlerBase<GifApiTranslateParameters, GifApiTranslateResult>
     {
-        private readonly Configuration _configuration;
-        
-        public GifTranslateHandler(Configuration configuration)
+        public GifTranslateHandler(Configuration configuration) : base(configuration)
         {
-            _configuration = configuration;
         }
         
-        public async Task<GifApiTranslateResult> Invoke(GifApiTranslateParameters parameters)
+        public override async Task<GifApiTranslateResult> Invoke(GifApiTranslateParameters parameters)
         {
             var connector = new GifTranslateConnector();
 
             GifTranslateRequest request = new GifTranslateRequest()
             {
-                ApiKey = _configuration.GifApiKey,
+                ApiKey = Configuration.GifApiKey,
                 Text = parameters.TextToTranslate
             };
 
