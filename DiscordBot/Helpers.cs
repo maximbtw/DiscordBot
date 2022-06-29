@@ -2,12 +2,13 @@
 
 namespace DiscordBot
 {
-    public static class CommandAsset
+    public static class Helpers
     {
         public static int GetRandom(int minValue = 0, int maxValue = 101)
         {
-            var rnd = new Random();
-            return rnd.Next(minValue, maxValue);
+            var random = new Random();
+            
+            return random.Next(minValue, maxValue);
         }
 
         public static void ShufleArray<T>(T[] array)
@@ -18,9 +19,7 @@ namespace DiscordBot
             {
                 int j = rnd.Next() % (i + 1);
 
-                var temp = array[j];
-                array[j] = array[i];
-                array[i] = temp;
+                (array[j], array[i]) = (array[i], array[j]);
             }
         }
     }

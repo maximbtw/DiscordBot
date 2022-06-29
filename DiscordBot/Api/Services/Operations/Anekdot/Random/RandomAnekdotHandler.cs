@@ -27,11 +27,13 @@ namespace DiscordBot.Api.Services.Operations.Anekdot.Random
                     IsSuccessful = false
                 };
             }
+
+            int anekdotIndex = Helpers.GetRandom(0, apiResult.Response.Anekdots.Count);
             
             return new ApiAnekdotResult
             {
                 IsSuccessful = true,
-                Text = apiResult.Response.AnekdotText
+                Text = apiResult.Response.Anekdots[anekdotIndex]
             };
         }
     }

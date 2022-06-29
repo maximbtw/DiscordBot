@@ -13,12 +13,12 @@ namespace DiscordBot.Commands
             [Description("Минимальное значаение")] int minValue = 0,
             [Description("Максимальное значаение")] int maxValue = 101)
         {
-            var number = CommandAsset.GetRandom(minValue, maxValue).ToString();
+            var number = Helpers.GetRandom(minValue, maxValue).ToString();
 
             var msg1 = await ctx.RespondAsync(number);
             for (int i = 0; i < 5; i++)
             {
-                number = CommandAsset.GetRandom(minValue, maxValue).ToString();
+                number = Helpers.GetRandom(minValue, maxValue).ToString();
                 await msg1.ModifyAsync(number);
                 System.Threading.Thread.Sleep(100);
             }
@@ -33,7 +33,7 @@ namespace DiscordBot.Commands
                                   .Select(x => x.DisplayName)
                                   .ToArray();
             if (users == null) return;
-            CommandAsset.ShufleArray(users);
+            Helpers.ShufleArray(users);
 
             string text = string.Empty;
             for (int i = 0; i < users.Length; i++)

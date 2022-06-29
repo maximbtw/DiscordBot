@@ -1,7 +1,9 @@
-﻿namespace DiscordBot.Api.Connectors.Contracts.Anekdot.Random.Response
+﻿using System.Collections.Generic;
+
+namespace DiscordBot.Api.Connectors.Contracts.Anekdot.Random.Response
 {
     public class RandomAnekdotResponse
     {
-        public string AnekdotText { get; set; }
+        public List<string> Anekdots { get; set; }
     }
 }

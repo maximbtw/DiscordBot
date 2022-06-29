@@ -33,7 +33,7 @@ namespace DiscordBot.Api.Connectors.Anekdot.Random
                     result.IsSuccessful = true;
                     result.Response = new RandomAnekdotResponse
                     {
-                        AnekdotText = GetRandomAnekdot(anekdots)
+                        Anekdots = anekdots
                     };
                 }
             }
@@ -44,13 +44,6 @@ namespace DiscordBot.Api.Connectors.Anekdot.Random
             }
             
             return result;
-        }
-
-        private static string GetRandomAnekdot(List<string> anekdots)
-        {
-            var random = new System.Random();
-
-            return anekdots[random.Next(0, anekdots.Count)];
         }
 
         private static async Task<List<string>> ParseAnekdots()
