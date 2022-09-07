@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 
 namespace DiscordBot
 {
@@ -21,6 +22,11 @@ namespace DiscordBot
 
                 (array[j], array[i]) = (array[i], array[j]);
             }
+        }
+        
+        public static bool CollectionIsNullOrEmpty(IEnumerable collection)
+        {
+            return collection == null || !collection.GetEnumerator().MoveNext();
         }
     }
 }
